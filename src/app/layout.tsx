@@ -25,7 +25,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         <CartProvider catalog={products}>
         <CatalogProvider>
           <Header />
-          <main id="main-content" tabIndex={-1} className="mx-auto w-full max-w-6xl flex-1 px-6 py-12">
+          <main id="main-content" tabIndex={-1} className="store-container flex-1 py-12">
             {children}
           </main>
           <Footer />

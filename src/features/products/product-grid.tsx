@@ -5,23 +5,26 @@ import { CartCatalogRegistration } from "../cart/cart-provider";
 
 interface ProductGridProps {
   products: readonly Product[];
+  collectionStatus?: "ready" | "error" | "empty";
 }
 
-// Matches the current 1152px shared shell, 24px gutters, grid gaps and 9px
-// card inset (8px padding + 1px border). Revisit when the shell is migrated.
+// Shared 1440px container, responsive outer gutters, grid gaps, and
+// 18px total card inset (8px padding + 1px border on each side).
 const imageSizes = [
-  "(min-width: 1152px) 334px",
-  "(min-width: 901px) calc((100vw - 150px) / 3)",
-  "(min-width: 701px) calc((100vw - 108px) / 2)",
-  "(min-width: 400px) calc((100vw - 100px) / 2)",
-  "calc(100vw - 66px)",
+  "(min-width: 1552px) 446px",
+  "(min-width: 1101px) calc((100vw - 214px) / 3)",
+  "(min-width: 901px) calc((100vw - 166px) / 3)",
+  "(min-width: 701px) calc((100vw - 124px) / 2)",
+  "(min-width: 400px) calc((100vw - 88px) / 2)",
+  "calc(100vw - 54px)",
 ].join(", ");
 
-export function ProductGrid({ products }: ProductGridProps) {
+export function ProductGrid({ products, collectionStatus }: ProductGridProps) {
   return (
     <CartCatalogRegistration products={products}>
     <InteractiveCatalog
       products={products}
+      collectionStatus={collectionStatus}
       cards={products.map((product) => (
         <li key={product.id} className="min-w-0">
           <ProductCard product={product} imageSizes={imageSizes} />

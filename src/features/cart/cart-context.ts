@@ -1,6 +1,6 @@
 "use client";
 
-import { createContext, useContext } from "react";
+import { createContext, useContext, useSyncExternalStore } from "react";
 import type { createCartController, CartSnapshot } from "./cart-controller";
 import { calculateCartCount, calculateCartTotal } from "./cart-logic";
 
@@ -9,10 +9,12 @@ export const CartContext = createContext<(ReturnType<typeof createCartController
 export function useCart() {
   const context = useContext(CartContext);
   if (!context) throw new Error("Cart controls require CartProvider");
+  const snapshot = useSyncExternalStore(context.subscribe, context.getSnapshot, context.getServerSnapshot);
   return {
     ...context,
-    items: context.catalog.filter(product => context.quantities[product.id]),
-    count: calculateCartCount(context.quantities),
-    total: calculateCartTotal(context.catalog, context.quantities),
+    ...snapshot,
+    items: snapshot.catalog.filter(product => snapshot.quantities[product.id]),
+    count: calculateCartCount(snapshot.quantities),
+    total: calculateCartTotal(snapshot.catalog, snapshot.quantities),
   };
 }

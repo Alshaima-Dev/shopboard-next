@@ -1,5 +1,5 @@
-import { RouteText } from "@/features/i18n/language-provider";
+import { ShippingInformation } from "@/features/shipping/shipping-information";
 
 export default function ShippingPage() {
-  return <h1 className="text-3xl font-semibold"><RouteText name="shipping" /></h1>;
+  return <ShippingInformation />;
 }

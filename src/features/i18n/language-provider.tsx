@@ -3,7 +3,6 @@
 import { createContext, useContext, useEffect, useState, useSyncExternalStore } from "react";
 import type { ReactNode } from "react";
 import { usePathname } from "next/navigation";
-import type { Language } from "../products/product-types";
 import { createLanguageController } from "./language-store";
 import { applyDocumentLanguage } from "./language-document";
 import { formatNumber, formatPrice, getProductText, translate } from "./i18n";
@@ -12,7 +11,7 @@ import type { Product } from "../products/product-types";
 import { routeMessages } from "./route-messages";
 import { catalogMessages } from "./catalog-messages";
 
-const LanguageContext = createContext<{ language: Language; setLanguage: (value: unknown) => void } | undefined>(undefined);
+const LanguageContext = createContext<ReturnType<typeof createLanguageController> | undefined>(undefined);
 
 export function LanguageProvider({ children }: { children: ReactNode }) {
   const [controller] = useState(createLanguageController);
@@ -20,13 +19,16 @@ export function LanguageProvider({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   useEffect(() => { controller.restore(); }, [controller]);
   useEffect(() => { applyDocumentLanguage(document, language); }, [language, pathname]);
-  return <LanguageContext.Provider value={{ language, setLanguage: controller.setLanguage }}>{children}</LanguageContext.Provider>;
+  return <LanguageContext.Provider value={controller}>{children}</LanguageContext.Provider>;
 }
 
 export function useLanguage() {
-  const context = useContext(LanguageContext);
-  if (!context) throw new Error("Localized UI requires LanguageProvider");
-  return context;
+  const controller = useContext(LanguageContext);
+  if (!controller) throw new Error("Localized UI requires LanguageProvider");
+  // Each streamed consumer must hydrate with the server's EN snapshot even
+  // when the root has already restored a saved language before it arrives.
+  const language = useSyncExternalStore(controller.subscribe, controller.getSnapshot, controller.getServerSnapshot);
+  return { language, setLanguage: controller.setLanguage };
 }
 
 export function useLocalization() {

@@ -1,5 +1,62 @@
 @import "tailwindcss";
 
+@utility storefront-primary {
+  @apply inline-flex max-w-full cursor-pointer items-center justify-center rounded-control bg-primary font-medium leading-[1.6] text-center text-primary-foreground [overflow-wrap:break-word];
+  touch-action: manipulation;
+
+  &:active {
+    background-color: var(--color-chocolate);
+  }
+
+  @media (hover: hover) and (pointer: fine) {
+    &:hover {
+      background-color: var(--color-chocolate);
+    }
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    transition: scale 150ms ease-out, background-color 120ms ease, color 120ms ease;
+    &:active:not(:focus-visible) {
+      scale: 0.96;
+    }
+  }
+
+  &:focus-visible {
+    transition: none;
+  }
+}
+
+@utility store-nav-link {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--spacing-touch-target);
+  padding-block: 10px;
+
+  &[aria-current]::after {
+    content: "";
+    position: absolute;
+    inset-inline: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--color-primary);
+  }
+}
+
+@utility store-container {
+  width: calc(100% - 2 * var(--spacing-gutter-mobile));
+  max-width: var(--container-store);
+  margin-inline: auto;
+
+  @variant tablet {
+    width: calc(100% - 2 * var(--spacing-gutter-tablet));
+  }
+
+  @variant wide {
+    width: calc(100% - 2 * var(--spacing-gutter-wide));
+  }
+}
+
 /* Exact source palette and measured primitives; component styling comes later. */
 @theme static {
   --color-burgundy: #6b2c2c;
