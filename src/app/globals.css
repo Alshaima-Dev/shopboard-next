@@ -1,0 +1,123 @@
+@import "tailwindcss";
+
+/* Exact source palette and measured primitives; component styling comes later. */
+@theme static {
+  --color-burgundy: #6b2c2c;
+  --color-cream: #f8f1e7;
+  --color-beige: #d8c3a5;
+  --color-coffee: #8b6b4a;
+  --color-chocolate: #3e2723;
+
+  --radius-control: 8px;
+  --radius-image: 12px;
+  --radius-card: 21px;
+  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.04), 0 4px 16px oklch(0 0 0 / 0.035);
+  --shadow-card-active: 0 1px 3px oklch(0 0 0 / 0.06), 0 6px 20px oklch(0 0 0 / 0.07);
+  --ease-ui: cubic-bezier(0.23, 1, 0.32, 1);
+
+  /* Source px thresholds expressed in rem, matching Tailwind's breakpoint units.
+     These names leave the existing sm/md/lg utilities unchanged. */
+  --breakpoint-catalog: 25rem; /* 400px */
+  --breakpoint-tablet: 43.8125rem; /* 701px */
+  --breakpoint-desktop: 56.3125rem; /* 901px */
+  --breakpoint-wide: 68.8125rem; /* 1101px */
+  --container-store: 1440px;
+
+  --spacing-gutter-mobile: 18px;
+  --spacing-gutter-tablet: 32px;
+  --spacing-gutter-wide: 56px;
+  --spacing-grid-inline: 16px;
+  --spacing-grid-block: 24px;
+  --spacing-grid-inline-tablet: 24px;
+  --spacing-grid-block-tablet: 28px;
+  --spacing-card-inset: 8px;
+  --spacing-card-copy: 4px;
+  --spacing-section: 48px;
+  --spacing-touch-target: 44px;
+  --spacing-control-height: 48px;
+
+  --text-body: 14px;
+  --text-body--line-height: 1.85;
+  --text-caption: 12px;
+  --text-caption--line-height: 1.5;
+  --text-product-title: 14px;
+  --text-product-title--line-height: 1.45;
+  --text-product-category: 11px;
+  --text-product-description: 12px;
+  --text-product-description--line-height: 1.7;
+  --text-input: 16px;
+  --text-hero: clamp(42px, 5vw, 68px);
+  --text-hero--line-height: 1.06;
+  --text-hero--letter-spacing: -0.025em;
+  --text-hero-tablet: clamp(40px, 4.6vw, 68px);
+  --text-hero-tablet--line-height: 1.06;
+  --text-hero-tablet--letter-spacing: -0.025em;
+  --text-hero-arabic: clamp(32px, 3.7vw, 50px);
+  --text-hero-arabic--line-height: 1.6;
+  --text-hero-arabic--letter-spacing: 0;
+  --text-heading-arabic: clamp(28px, 4vw, 42px);
+  --text-heading-arabic--line-height: 1.6;
+  --text-heading-arabic--letter-spacing: 0;
+  --leading-arabic-body: 2;
+  --leading-arabic-heading: 1.6;
+}
+
+/* Inline aliases resolve font variables at the element using the utility.
+   Language-scoped families can therefore also cover future Arabic UI. */
+@theme inline {
+  --color-primary: var(--color-burgundy);
+  --color-primary-foreground: var(--color-cream);
+  --color-background: var(--color-cream);
+  --color-foreground: var(--color-chocolate);
+  --color-accent: var(--color-beige);
+  --color-muted-foreground: var(--color-coffee);
+  --color-soft: color-mix(in srgb, var(--color-beige) 16%, var(--color-cream));
+  --color-border: color-mix(in srgb, var(--color-beige) 65%, var(--color-cream));
+  --color-ring: var(--color-burgundy);
+  --font-sans: var(--font-body-family);
+  --font-heading: var(--font-heading-family);
+  --font-display: var(--font-display-family);
+  --font-arabic: var(--font-noto-arabic), Tahoma, sans-serif;
+  --font-brand: var(--font-cormorant), Georgia, serif;
+}
+
+:where(:root, [lang="en"], [lang="tr"]) {
+  --font-body-family: var(--font-dm-sans), var(--font-noto-arabic), sans-serif;
+  --font-heading-family: var(--font-manrope), var(--font-noto-arabic), sans-serif;
+  --font-display-family: var(--font-cormorant), Georgia, serif;
+}
+
+:where([lang="ar"]) {
+  --font-body-family: var(--font-noto-arabic), Tahoma, sans-serif;
+  --font-heading-family: var(--font-noto-arabic), Tahoma, sans-serif;
+  --font-display-family: var(--font-noto-arabic), Tahoma, sans-serif;
+}
+
+@layer base {
+  body:has(dialog[open]) {
+    overflow: hidden;
+  }
+  body {
+    font-size: var(--text-body);
+    font-synthesis: none;
+  }
+
+  :where(:lang(ar)) {
+    font-family: var(--font-noto-arabic), Tahoma, sans-serif;
+    letter-spacing: normal;
+    font-style: normal;
+  }
+
+  :where(h1:lang(ar), h2:lang(ar)) {
+    line-height: var(--leading-arabic-heading);
+  }
+
+  :where(p:lang(ar)) {
+    line-height: var(--leading-arabic-body);
+  }
+
+  :where(a, button, input, select, textarea):focus-visible {
+    outline: 2px solid var(--color-ring);
+    outline-offset: 4px;
+  }
+}
