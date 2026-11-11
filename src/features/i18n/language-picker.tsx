@@ -7,7 +7,7 @@ export function LanguagePicker() {
   return (
     <div className="flex items-center">
       <label htmlFor="language" className="sr-only">{t("language")}</label>
-      <select id="language" dir="auto" value={language} onChange={(event) => setLanguage(event.currentTarget.value)} className="min-h-touch-target w-[108px] cursor-pointer rounded-control border border-coffee bg-background p-2 text-input">
+      <select id="language" dir="auto" value={language} onChange={(event) => setLanguage(event.currentTarget.value)} className="min-h-touch-target w-[84px] cursor-pointer rounded-control border border-coffee bg-background p-2 text-input tablet:w-[108px]">
         <option value="ar" lang="ar" dir="rtl">العربية</option>
         <option value="en" lang="en">English</option>
         <option value="tr" lang="tr">Türkçe</option>

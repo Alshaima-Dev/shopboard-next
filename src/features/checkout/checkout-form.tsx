@@ -1,6 +1,7 @@
 "use client";
 
 import { useForm } from "react-hook-form";
+import { Input } from "@/components/ui/input";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useCart } from "../cart/cart-context";
 import { checkoutSchema, checkoutDefaults } from "./checkout-schema";
@@ -46,14 +47,14 @@ export function CheckoutForm({ onComplete }: { onComplete: (receipt: DemoCheckou
             return (
               <div key={field.name} className="grid min-w-0 content-start gap-2">
                 <label htmlFor={id} className="text-start text-[13px] leading-[1.6] font-medium">{text.fields[field.name]}</label>
-                <input
+                <Input
+                  variant="outline" controlSize="sm"
                   {...form.register(field.name)}
                   id={id} type={field.type} autoComplete={field.autoComplete}
                   dir={field.type === "email" || field.type === "tel" ? "ltr" : undefined}
                   aria-required={field.name !== "phone"}
                   aria-invalid={Boolean(error)}
                   aria-describedby={error ? `${id}-error` : undefined}
-                  className="min-h-[46px] w-full min-w-0 rounded-md border border-coffee bg-transparent px-3 py-[10px] text-input shadow-xs focus-visible:border-ring focus-visible:ring-[3px] focus-visible:ring-ring/50 aria-invalid:border-primary aria-invalid:ring-primary/20 disabled:opacity-50"
                 />
                 {error && <p id={`${id}-error`} role="alert" className="font-semibold text-primary">{error}</p>}
               </div>

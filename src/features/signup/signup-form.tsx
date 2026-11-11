@@ -1,6 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
+import { Input } from "@/components/ui/input";
 import { useLanguage } from "../i18n/language-provider";
 import { signupMessages } from "./signup-messages";
 import { signupValidation, submitSignupDemo } from "./signup-submit";
@@ -8,7 +9,6 @@ import { signupValidation, submitSignupDemo } from "./signup-submit";
 const subscribe = () => () => {};
 const getClientSnapshot = () => true;
 const getServerSnapshot = () => false;
-const inputClassName = "min-w-0 w-full rounded-control border border-coffee bg-background px-[14px] py-3 text-input leading-[1.5] text-foreground";
 
 export function SignupForm() {
   const { language } = useLanguage();
@@ -34,11 +34,11 @@ export function SignupForm() {
         <fieldset disabled={!hydrated} aria-labelledby="signup-title" className="grid min-w-0 gap-[18px] border-0 p-0">
           <div className="grid min-w-0 gap-2">
             <label htmlFor="signup-email" className="text-start text-[13px] leading-[1.6]">{text.email}</label>
-            <input id="signup-email" name="email" type="email" autoComplete="email" dir="ltr" {...signupValidation.email} className={inputClassName} />
+            <Input id="signup-email" name="email" type="email" autoComplete="email" dir="ltr" {...signupValidation.email} />
           </div>
           <div className="grid min-w-0 gap-2">
             <label htmlFor="signup-password" className="text-start text-[13px] leading-[1.6]">{text.password}</label>
-            <input id="signup-password" name="password" type="password" autoComplete="new-password" aria-describedby="signup-password-hint" {...signupValidation.password} className={inputClassName} />
+            <Input id="signup-password" name="password" type="password" autoComplete="new-password" aria-describedby="signup-password-hint" {...signupValidation.password} />
             <small id="signup-password-hint" className="text-[13px] leading-[1.7]">{text.passwordHint}</small>
           </div>
           <button type="submit" className="min-h-touch-target rounded-control bg-primary px-5 py-3 font-medium text-primary-foreground">{text.submit}</button>

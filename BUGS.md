@@ -223,3 +223,93 @@ Record confirmed bugs and errors here using the structure required by AGENTS.md.
 - **Cause:** `src/features/cart/cart-context.ts` read the restored root context directly in `useCart`. The late consumer's first render therefore differed from its server-rendered disabled state; it did not independently hydrate from the controller's stable server snapshot.
 - **Fix:** Resolved. Read the existing controller through `useSyncExternalStore` inside `useCart`, merge that snapshot into the returned context, and derive items/count/total from it. Delayed home and shop checks with saved Arabic and Turkish now explicitly wait for enabled product actions. Existing cart persistence, totals, navigation, dialogs, checkout, and quantity-limit tests also pass.
 - **Did I use AI? For what?** Yes. Codex detected the stuck button while investigating streaming hydration, corrected the consumer snapshot handling, and added delayed-action regression coverage.
+
+## Bug 26
+
+- **What I saw:** The new Button prop-type test reported five diagnostics instead of the four intentionally invalid prop values.
+- **Type:** logic
+- **How I found it:** `node --test tests/button.test.mjs` printed an extra TypeScript incremental-compilation configuration error.
+- **Cause:** The virtual compiler fixture in `tests/button.test.mjs` inherited `incremental: true` from the project configuration without supplying a build-info path. This added a configuration diagnostic unrelated to Button props.
+- **Fix:** Resolved. Disable incremental compilation only for the in-memory fixture. The application TypeScript configuration remains unchanged, and the test now verifies the four rejected prop values without creating build-info or fixture files.
+- **Did I use AI? For what?** Yes. Codex wrote the focused test, diagnosed the extra compiler diagnostic, and corrected its isolated compiler options.
+
+## Bug 27
+
+- **What I saw:** The cart keyboard-trap test failed after the new native-disabled Button check, although dimensions, Space activation, and disabled-click prevention passed.
+- **Type:** logic
+- **How I found it:** The full browser suite reported focus outside the cart during the following Tab traversal assertion.
+- **Cause:** The added check in `tests/product-cards.browser.mjs` temporarily disabled the focused quantity button. Re-enabling it did not establish a reliable starting focus for the next independent keyboard test.
+- **Fix:** Resolved. Restore focus explicitly to the cart close button after re-enabling the quantity control. Application focus handling and native disabled semantics are unchanged.
+- **Did I use AI? For what?** Yes. Codex added the disabled-control check, identified its effect on the next test, and restored test isolation.
+
+## Bug 28
+
+- **What I saw:** The new Input type-safety test failed even though TypeScript correctly rejected all six invalid prop examples.
+- **Type:** logic
+- **How I found it:** `node --test tests/input.test.mjs` printed the expected six diagnostics but failed its message-content assertion.
+- **Cause:** The test expected rejected boolean/numeric prop values to appear literally in TypeScript's diagnostic text. Those errors instead report the generalized `string` type and its incompatible target type.
+- **Fix:** Resolved. Check that each invalid fixture line receives a diagnostic and assert the relevant reported target types instead of requiring literal values. All focused Input tests now pass; application props and compiler settings are unchanged.
+- **Did I use AI? For what?** Yes. Codex wrote the fixture, identified the brittle diagnostic assertion, and corrected the test.
+
+## Bug 29
+
+- **What I saw:** The new reverse-Tab browser test failed when focus moved from the first dialog control into browser chrome.
+- **Type:** logic
+- **How I found it:** `node tests/product-cards.browser.mjs` failed its new focus-containment assertion. A CDP inspection showed `document.hasFocus()` was false while the cart still matched `:modal`.
+- **Cause:** `tests/product-cards.browser.mjs` required every Shift+Tab step to leave an element inside the dialog focused. Native dialog traversal permits browser chrome to receive focus; this is expected browser behavior, not an application bug.
+- **Fix:** Resolved. Corrected the test to allow browser focus while requiring any focused page element to remain inside the dialog. Added an explicit check that attempting to focus the background cart opener cannot move focus outside the modal. The full production browser suite passed, including reverse Tab, Escape, backdrop dismissal, focus restoration, EN/AR/TR drawer geometry, confirmation focus, and hydration checks.
+- **Did I use AI? For what?** Yes. Codex introduced the test assertion, inspected real browser focus through CDP, identified the incorrect assumption, and corrected the test without changing native dialog behavior.
+
+## Bug 30
+
+- **What I saw:** The initial Home CSS migration generated an invalid SVG background-image warning, and its first arbitrary alignment utility did not produce `align-items: end`.
+- **Type:** logic
+- **How I found it:** The production build reported an invalid URL while optimizing CSS. The matched browser comparison then showed the grid alignment computed as `normal` instead of the baseline's `end`.
+- **Cause:** The initial `homeSearchClassName` in `src/features/products/interactive-catalog.tsx:37` escaped quotes inside an arbitrary URL utility; Tailwind scanned those source escapes into invalid CSS. The controls grid also used unsupported `items-[end]` syntax.
+- **Fix:** Resolved. Use a quote-free, percent-encoded SVG URL and the supported `[align-items:end]` arbitrary property. The production build has no CSS warning; measured styles and geometry match all 36 EN/AR/TR baseline cases. These were migration errors caught before completion; no original project file was changed.
+- **Did I use AI? For what?** Yes. Codex introduced the initial utility classes, diagnosed the compiler warning and computed-style mismatch, corrected both classes, and ran the production and browser checks.
+
+## Bug 31
+
+- **What I saw:** The first dark-mode browser run timed out while trying to move from system mode to dark mode.
+- **Type:** logic
+- **How I found it:** `node tests/theme.browser.mjs` timed out waiting for `data-theme-preference="dark"` after two scripted clicks.
+- **Cause:** `tests/theme.browser.mjs:80` dispatched both clicks synchronously in one evaluation. React batched them against the same rendered system-state handler, so both requested light mode.
+- **Fix:** Resolved. Dispatch one click, wait for the light render, then dispatch the second click. The complete theme browser test now verifies all three transitions.
+- **Did I use AI? For what?** Yes. Codex wrote the browser scenario, diagnosed its batched-event assumption, and corrected the transition sequencing.
+
+## Bug 32
+
+- **What I saw:** The existing full browser suite stopped during a reload even though the cart count appeared correctly moments later.
+- **Type:** logic
+- **How I found it:** `node tests/product-cards.browser.mjs` raised a TypeError while polling for the restored count; CDP inspection then showed the expected count of 99.
+- **Cause:** `tests/product-cards.browser.mjs:375` read `.textContent` before the streamed header had mounted, so the polling expression threw instead of retrying.
+- **Fix:** Resolved. Use optional chaining while polling so the assertion waits through the transient missing element. The full browser suite passes with no hydration errors.
+- **Did I use AI? For what?** Yes. Codex ran the suite, inspected the live page through CDP, identified the unsafe transient query, and fixed the polling expression.
+
+## Bug 33
+
+- **What I saw:** A saved dark preference rendered the light background during the first browser animation frame before switching to dark.
+- **Type:** runtime
+- **How I found it:** The dedicated CDP test installed a pre-document observer and captured the first animation frame during a saved-dark reload. It reported `rgb(248, 241, 231)` before the dark theme attribute appeared.
+- **Cause:** `src/app/layout.tsx` used Next.js `Script` with `strategy="beforeInteractive"`. In this rendered document, that script did not apply the theme before the first measured frame.
+- **Fix:** Resolved. Render the small static initializer as a parser-executed script in the root `<head>`, before body styles are painted. The first-frame test now requires `data-theme="dark"` and the dark background on the initial frame.
+- **Did I use AI? For what?** Yes. Codex designed the first-frame probe, confirmed the flash in Chrome, moved the initializer to the parser-executed head position, and reran hydration and theme validation.
+
+## Bug 34
+
+- **What I saw:** A light-mode assertion received the dark primary color during the final validation run.
+- **Type:** state
+- **How I found it:** `tests/product-cards.browser.mjs` expected the light burgundy announcement background but received the dark rose value.
+- **Cause:** The dark and light browser suites were accidentally started against the same CDP page before the dark suite had exited. Both suites changed the shared document, viewport, storage, and theme state.
+- **Fix:** Resolved. Run the browser suites sequentially. Both the dedicated theme suite and complete light storefront suite pass independently on the final production build.
+- **Did I use AI? For what?** Yes. Codex identified the shared-browser race from the conflicting computed color and corrected the validation order.
+
+## Bug 35
+
+- **What I saw:** The dark surface test expected the Shop search input itself to have the dark page background, but its computed background was transparent.
+- **Type:** logic
+- **How I found it:** `node tests/theme.browser.mjs` failed the shared-surface assertion after the browser-suite race was removed.
+- **Cause:** `tests/theme.browser.mjs:127` inspected `#product-search`. On the collection page, that input is intentionally transparent inside its styled `label[for="product-search"]` control surface.
+- **Fix:** Resolved. Check the owning search-control label's background and continue checking the input text separately. The final theme browser suite passes.
+- **Did I use AI? For what?** Yes. Codex traced the computed style to the existing control structure and corrected the test target without changing the component design.

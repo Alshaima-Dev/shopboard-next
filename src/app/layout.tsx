@@ -7,6 +7,8 @@ import { CatalogProvider } from "@/features/products/catalog-provider";
 import { CartProvider } from "@/features/cart/cart-provider";
 import { products } from "@/features/products/product-data";
 import { LanguageProvider, RouteText } from "@/features/i18n/language-provider";
+import { ThemeProvider } from "@/features/theme/theme-provider";
+import { themeInitializationScript } from "@/features/theme/theme-script";
 import "./globals.css";
 
 export const metadata: Metadata = {
@@ -16,8 +18,10 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: ReactNode }>) {
   return (
-    <html lang="en" dir="ltr" className={fontVariables}>
+    <html lang="en" dir="ltr" className={fontVariables} suppressHydrationWarning>
+      <head><script id="theme-initializer">{themeInitializationScript}</script></head>
       <body className="flex min-h-dvh flex-col bg-background font-sans text-foreground antialiased">
+        <ThemeProvider>
         <LanguageProvider>
         <a href="#main-content" className="sr-only focus:not-sr-only focus:fixed focus:start-4 focus:top-4 focus:z-50 focus:bg-background focus:p-4">
           <RouteText name="skip" />
@@ -32,6 +36,7 @@ export default function RootLayout({ children }: Readonly<{ children: ReactNode 
         </CatalogProvider>
         </CartProvider>
         </LanguageProvider>
+        </ThemeProvider>
       </body>
     </html>
   );

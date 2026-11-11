@@ -55,7 +55,7 @@ try {
   await send("Emulation.setScrollbarsHidden", { hidden: true });
   await send("Page.navigate", {url: origin + "/"});
   await waitFor("location.pathname === '/' && document.readyState === 'complete'");
-  await evaluate("localStorage.setItem('shopboard-language','en')");
+  await evaluate("localStorage.setItem('shopboard-language','en');localStorage.setItem('shopboard-theme','light')");
   await send("Page.navigate", {url: origin + "/shop"});
   await waitFor("document.querySelectorAll('main article').length === 12");
   await evaluate("document.fonts.ready.then(() => true)");
@@ -292,6 +292,31 @@ try {
   await evaluate("document.querySelector('#open-cart').click()");
   await waitFor("document.querySelector('#cart').open");
   assert.equal(await evaluate("document.querySelector('#cart-total').textContent"), "$328");
+  const sharedButtonStyles=await evaluate(`Array.from(document.querySelectorAll('#cart button'), button => {
+    const style=getComputedStyle(button), rect=button.getBoundingClientRect();
+    const result={id:button.id,width:rect.width,height:rect.height,radius:style.borderRadius,border:style.borderTopWidth,padding:style.paddingInlineStart};
+    button.style.display='grid';
+    const original=button.getBoundingClientRect();
+    result.originalWidth=original.width;result.originalHeight=original.height;
+    button.style.removeProperty('display');return result;
+  })`);
+  for(const style of sharedButtonStyles) {
+    assert.ok(style.height>=44);
+    assert.equal(style.radius,"8px");assert.equal(style.border,"1px");assert.equal(style.padding,"12px");
+    assert.ok(Math.abs(style.width-style.originalWidth)<1,JSON.stringify(style));
+    assert.ok(Math.abs(style.height-style.originalHeight)<1,JSON.stringify(style));
+  }
+  await evaluate("document.querySelector('#cart [data-change=\"1\"]').focus()");
+  await send("Input.dispatchKeyEvent",{type:"keyDown",key:" ",code:"Space",windowsVirtualKeyCode:32});
+  await send("Input.dispatchKeyEvent",{type:"keyUp",key:" ",code:"Space",windowsVirtualKeyCode:32});
+  await waitFor("document.querySelector('#cart-total').textContent === '$239'");
+  await evaluate("document.querySelectorAll('#cart [data-change=\"1\"]')[1].click()");
+  await waitFor("document.querySelector('#cart-total').textContent === '$328'");
+  await evaluate("document.querySelector('#cart [data-change=\"1\"]').disabled=true;document.querySelector('#cart [data-change=\"1\"]').click()");
+  assert.equal(await evaluate("document.querySelector('#cart-total').textContent"),"$328");
+  assert.equal(await evaluate("getComputedStyle(document.querySelector('#cart [data-change=\"1\"]')).opacity"),"0.45");
+  await evaluate("document.querySelector('#cart [data-change=\"1\"]').disabled=false;document.querySelector('#close-cart').focus()");
+  console.log("Shared Button cart dimensions, Space activation, native disabled behavior and opacity passed");
   assert.ok(await evaluate("document.querySelector('#cart').contains(document.activeElement)"));
   for (let i = 0; i < 8; i++) {
     await send("Input.dispatchKeyEvent", {type:"keyDown",key:"Tab",code:"Tab",windowsVirtualKeyCode:9});
@@ -301,6 +326,25 @@ try {
   await send("Input.dispatchKeyEvent", {type:"keyDown",key:"Escape",code:"Escape",windowsVirtualKeyCode:27});
   await send("Input.dispatchKeyEvent", {type:"keyUp",key:"Escape",code:"Escape",windowsVirtualKeyCode:27});
   await waitFor("!document.querySelector('#cart').open && document.activeElement.id === 'open-cart'");
+  await evaluate("document.querySelector('#open-cart').click()");
+  await waitFor("document.querySelector('#cart').open");
+  assert.equal(await evaluate("document.querySelector('#cart').matches(':modal')"),true);
+  assert.equal(await evaluate("document.querySelector('#cart').getAttribute('aria-labelledby')"),"cart-title");
+  await evaluate("document.querySelector('#close-cart').focus()");
+  for (let i = 0; i < 10; i++) {
+    await send("Input.dispatchKeyEvent", {type:"keyDown",key:"Tab",code:"Tab",windowsVirtualKeyCode:9,modifiers:8});
+    await send("Input.dispatchKeyEvent", {type:"keyUp",key:"Tab",code:"Tab",windowsVirtualKeyCode:9,modifiers:8});
+    // Native dialogs allow traversal into browser chrome, but never background page controls.
+    assert.ok(await evaluate("!document.hasFocus() || document.querySelector('#cart').contains(document.activeElement)"));
+  }
+  await evaluate("document.querySelector('#close-cart').focus();document.querySelector('#open-cart').focus()");
+  assert.ok(await evaluate("document.querySelector('#cart').contains(document.activeElement)"));
+  await send("Emulation.setDeviceMetricsOverride",{width:1440,height:1000,deviceScaleFactor:1,mobile:false});
+  await evaluate("new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(resolve)))");
+  await send("Input.dispatchMouseEvent",{type:"mousePressed",x:5,y:100,button:"left",clickCount:1});
+  await send("Input.dispatchMouseEvent",{type:"mouseReleased",x:5,y:100,button:"left",clickCount:1});
+  await waitFor("!document.querySelector('#cart').open && document.activeElement.id === 'open-cart'");
+  console.log("Shared Modal native top layer, reverse Tab containment, backdrop closing and focus restoration passed");
   await evaluate("document.querySelector('nav a[href=\"/about\"]').click()");
   await waitFor("location.pathname === '/about'");
   assert.equal(await evaluate("document.querySelector('#count').textContent"), "3");
@@ -328,7 +372,7 @@ try {
 
   await evaluate("localStorage.setItem('shopboard-catalog-cart-v2', JSON.stringify({'1':200,'2':-1,'3':1.5,'4':'2','999':5}))");
   await send("Page.reload", {ignoreCache:true});
-  await waitFor("document.querySelector('#count').textContent === '99'");
+  await waitFor("document.querySelector('#count')?.textContent === '99'");
   await evaluate("document.querySelector('#open-cart').click()");
   await waitFor("document.querySelector('#cart').open");
   await evaluate("document.querySelector('[aria-label=\"Increase Leather Tote Bag quantity\"]').click()");
@@ -407,6 +451,14 @@ try {
     assert.equal(layout.fields,width<701?1:2);
     assert.equal(layout.page,width<901?1:2);
     assert.equal(layout.overflow,false);
+    const checkoutInputs=await evaluate(`Array.from(document.querySelectorAll('main form input:not([type=checkbox])'), input=>{
+      const style=getComputedStyle(input);return {height:input.getBoundingClientRect().height,radius:style.borderRadius,border:style.borderTopColor,font:style.fontSize,paddingX:style.paddingInlineStart,paddingY:style.paddingTop};
+    })`);
+    assert.equal(checkoutInputs.length,7);
+    for(const input of checkoutInputs) {
+      assert.equal(input.height,46);assert.equal(input.radius,"6px");assert.equal(input.border,"rgb(139, 107, 74)");
+      assert.equal(input.font,"16px");assert.equal(input.paddingX,"12px");assert.equal(input.paddingY,"10px");
+    }
   }
   assert.equal(await evaluate("document.querySelector('#checkout-email').dir"), "ltr");
   assert.equal(await evaluate("document.querySelector('#checkout-phone').dir"), "ltr");
@@ -417,6 +469,9 @@ try {
   assert.equal(await evaluate("document.querySelector('#checkout-demo-error').textContent"), "Confirm that no order or payment will be processed.");
   assert.equal(await evaluate("document.querySelector('#checkout-fullName').getAttribute('aria-invalid')"), "true");
   assert.equal(await evaluate("document.querySelector('#checkout-fullName').getAttribute('aria-describedby')"), "checkout-fullName-error");
+  assert.equal(await evaluate("getComputedStyle(document.querySelector('#checkout-fullName')).borderTopColor"),"rgb(107, 44, 44)");
+  assert.equal(await evaluate("getComputedStyle(document.querySelector('#checkout-fullName')).outlineWidth"),"2px");
+  assert.equal(await evaluate("getComputedStyle(document.querySelector('#checkout-fullName')).outlineOffset"),"4px");
 
   async function fillCheckout(id,value) {
     await waitFor("!document.querySelector('main fieldset').disabled && document.querySelector('main form').getAttribute('aria-busy') === 'false'");
@@ -482,7 +537,18 @@ try {
     assert.equal(layout.overflow,false);
     assert.ok(layout.formWidth<=480);
     assert.equal(layout.inputSize,"16px");
+    const signupInputs=await evaluate(`Array.from(document.querySelectorAll('#signup-form input'), input=>{
+      const style=getComputedStyle(input);return {height:input.getBoundingClientRect().height,radius:style.borderRadius,border:style.borderTopColor,paddingX:style.paddingInlineStart,paddingY:style.paddingTop};
+    })`);
+    for(const input of signupInputs) {
+      assert.equal(input.height,50);assert.equal(input.radius,"8px");assert.equal(input.border,"rgb(139, 107, 74)");
+      assert.equal(input.paddingX,"14px");assert.equal(input.paddingY,"12px");
+    }
   }
+  await evaluate("document.querySelector('#signup-form button').focus();document.querySelector('#signup-email').disabled=true;document.querySelector('#signup-email').focus()");
+  assert.notEqual(await evaluate("document.activeElement.id"),"signup-email");
+  assert.equal(await evaluate("getComputedStyle(document.querySelector('#signup-email')).opacity"),"0.5");
+  await evaluate("document.querySelector('#signup-email').disabled=false");
   await evaluate("document.querySelector('#signup-form button').click()");
   await waitFor("document.activeElement.id === 'signup-email'");
   assert.equal(await evaluate("document.querySelector('#signup-email').validity.valueMissing"),true);
@@ -560,6 +626,7 @@ try {
         const header = document.querySelector('header > div');
         const footer = document.querySelector('footer > div');
         const bag = document.querySelector('#open-cart');
+        const badge = document.querySelector('#count');
         const picker = document.querySelector('#language');
         const announcement = document.querySelector('#shipping-offer').parentElement;
         const style = element => getComputedStyle(element);
@@ -578,6 +645,10 @@ try {
           bagWidth: bag.getBoundingClientRect().width,
           bagLabel: style(bag.querySelector('span')).display,
           badgeBackground: style(document.querySelector('#count')).backgroundColor,
+          badgeDimensions: [badge.getBoundingClientRect().width, badge.getBoundingClientRect().height],
+          badgeTypography: [style(badge).fontSize, style(badge).fontWeight, style(badge).color],
+          badgeBorder: style(badge).borderTopWidth,
+          badgeSemantics: [badge.tagName, badge.getAttribute('role'), badge.getAttribute('aria-live'), badge.getAttribute('tabindex')],
           ribbonPaths: header.querySelectorAll('a[href="/"] svg path').length,
           ribbonWidth: header.querySelector('a[href="/"] svg').getBoundingClientRect().width,
           brandFont: style(header.querySelector('a[href="/"] span')).fontFamily,
@@ -595,13 +666,17 @@ try {
       assert.equal(shell.footerColor, "rgb(248, 241, 231)");
       assert.equal(shell.footerRadius, "16px");
       assert.deepEqual(shell.footerPadding, width < 701 ? ["36px", "24px", "32px"] : ["44px", "40px", "28px"]);
-      assert.equal(shell.pickerWidth,108);
+      assert.equal(shell.pickerWidth,width < 701 ? 84 : 108);
       assert.ok(shell.pickerHeight >= 44);
       assert.equal(shell.bagWidth, width < 701 ? 58 : 116);
       // Flex items are blockified in computed styles even with display:inline.
       if (width < 701) assert.equal(shell.bagLabel,"none");
       else assert.notEqual(shell.bagLabel,"none");
       assert.equal(shell.badgeBackground,"rgb(216, 195, 165)");
+      assert.deepEqual(shell.badgeDimensions,[23,23]);
+      assert.deepEqual(shell.badgeTypography,["10px","400","rgb(62, 39, 35)"]);
+      assert.equal(shell.badgeBorder,"1px");
+      assert.deepEqual(shell.badgeSemantics,["SPAN",null,null,null]);
       assert.equal(shell.ribbonPaths,4);
       assert.equal(shell.ribbonWidth,width < 701 ? 42 : 46);
       assert.match(shell.brandFont,/Cormorant/i);
@@ -609,6 +684,25 @@ try {
       assert.ok(shell.navHeight >= 44);
       assert.equal(shell.offer,messages[language].shippingOffer.replace("{price}",formatPrice(100,language)));
       assert.equal(shell.footerActive,"/shop");
+      await evaluate("document.querySelector('#open-cart').click()");
+      await waitFor("document.querySelector('#cart').open");
+      const modalLayout = await evaluate(`(() => {
+        const dialog = document.querySelector('#cart');
+        const rect = dialog.getBoundingClientRect();
+        const style = getComputedStyle(dialog);
+        return { width: rect.width, height: rect.height, left: rect.left, padding: style.paddingTop,
+          background: style.backgroundColor, modal: dialog.matches(':modal'),
+          label: document.getElementById(dialog.getAttribute('aria-labelledby')).textContent };
+      })()`);
+      assert.equal(modalLayout.width,Math.min(width,480));
+      assert.equal(modalLayout.height,1000);
+      assert.equal(modalLayout.left,language === "ar" ? 0 : Math.max(0,width-480));
+      assert.equal(modalLayout.padding,width < 701 ? "24px" : "32px");
+      assert.equal(modalLayout.background,"rgb(248, 241, 231)");
+      assert.equal(modalLayout.modal,true);
+      assert.equal(modalLayout.label,messages[language].cartTitle);
+      await evaluate("document.querySelector('#close-cart').click()");
+      await waitFor("!document.querySelector('#cart').open && document.activeElement.id === 'open-cart'");
       if ([375,768,1440].includes(width)) console.log(`Header/footer parity passed: ${language}, ${width}px`);
     }
   }
@@ -742,7 +836,7 @@ try {
     assert.equal(await evaluate("document.querySelector('#philosophy-title').textContent"),messages[language].philosophyTitle);
     assert.equal(await evaluate("document.querySelector('#signup-title').textContent"),messages[language].signupTitle);
     assert.equal(await evaluate("performance.timeOrigin"),homeTimeOrigin);
-    for (const width of [375,700,701,768,1100,1101,1440]) {
+    for (const width of [320,375,399,400,700,701,768,900,901,1100,1101,1440]) {
       await send("Emulation.setDeviceMetricsOverride",{width,height:1000,deviceScaleFactor:1,mobile:false});
       await evaluate("new Promise(resolve=>requestAnimationFrame(()=>requestAnimationFrame(()=>resolve(true))))");
       const home = await evaluate(`(() => {
@@ -918,6 +1012,8 @@ try {
       assert.ok(Math.abs(shipping.cardPadding-Math.min(48,Math.max(24,width*0.04)))<0.1);
       assert.equal(shipping.border,"1px");
       assert.equal(shipping.radius,"16px");
+      assert.equal(await evaluate("document.querySelector('[data-shipping-cards]').firstElementChild.tagName"),"SECTION");
+      assert.equal(await evaluate("document.querySelector('[data-shipping-page] aside').getAttribute('aria-labelledby')"),"shipping-availability");
       assert.notEqual(shipping.background,"rgba(0, 0, 0, 0)");
       assert.equal(shipping.noteBackground,"rgba(0, 0, 0, 0)");
       assert.ok(Math.abs(shipping.noteGap-24)<1);
@@ -985,6 +1081,8 @@ try {
     await waitFor("document.querySelector('[data-catalog-empty]')");
     assert.equal(await evaluate("document.querySelector('[data-catalog-empty] p').textContent"),messages[language].noResults);
     assert.equal(await evaluate("getComputedStyle(document.querySelector('[data-catalog-empty]')).borderRadius"),"16px");
+    assert.equal(await evaluate("document.querySelector('[data-catalog-empty]').tagName"),"DIV");
+    assert.equal(await evaluate("document.querySelector('[data-catalog-empty]').hasAttribute('tabindex')"),false);
     assert.equal(await evaluate("getComputedStyle(document.querySelector('[data-catalog-empty] a')).backgroundColor"),"rgb(107, 44, 44)");
     await evaluate("document.querySelector('[data-catalog-empty] button').click()");
     await expectIds([1,2,3,4,5,6,7,8,9,10,11,12]);
@@ -1022,6 +1120,7 @@ try {
       assert.equal(await evaluate("document.querySelector('[data-catalog-fallback] > p').textContent"),catalogMessages[language][status]);
       assert.equal(await evaluate("document.querySelector('[data-catalog-fallback] > p').getAttribute('role')"),status==="error"?"alert":"status");
       assert.equal(await evaluate("getComputedStyle(document.querySelector('[data-catalog-fallback]')).borderRadius"),"16px");
+      assert.equal(await evaluate("document.querySelector('[data-catalog-fallback]').tagName"),"DIV");
       const countBeforeRetry=browserRequests.length;
       await evaluate("document.querySelector('[data-catalog-fallback] button').click()");
       const retryDeadline=Date.now()+15000;

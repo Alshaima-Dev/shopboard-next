@@ -1,5 +1,6 @@
 "use client";
 
+import { Badge } from "@/components/ui/badge";
 import { useCart } from "./cart-context";
 import { useLocalization } from "../i18n/language-provider";
 import type { Product } from "../products/product-types";
@@ -10,7 +11,7 @@ export function CartButton() {
   return (
     <button id="open-cart" type="button" disabled={!cart.ready} onClick={cart.open} aria-label={t("openBag", { count: number(cart.count) })} className="flex min-h-touch-target w-[58px] shrink-0 cursor-pointer items-center justify-center gap-[6px] rounded-control p-1 text-[11px] rtl:[direction:rtl] tablet:w-[116px] tablet:p-2 motion-safe:transition-[scale,background-color,color] motion-safe:duration-150 motion-safe:ease-out enabled:active:bg-soft motion-safe:enabled:active:scale-[0.96] disabled:opacity-50">
       <svg width="21" height="21" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" focusable="false" className="shrink-0"><path d="M5 7h14l1 14H4L5 7Z"/><path d="M8 8V6a4 4 0 0 1 8 0v2"/></svg>
-      <span className="hidden tablet:inline">{t("bag")}</span><span id="count" className="grid size-[23px] shrink-0 place-items-center rounded-full border border-border bg-accent text-[10px] text-foreground tabular-nums">{number(cart.count)}</span>
+      <span className="hidden tablet:inline">{t("bag")}</span><Badge id="count" variant="soft" size="count">{number(cart.count)}</Badge>
     </button>
   );
 }

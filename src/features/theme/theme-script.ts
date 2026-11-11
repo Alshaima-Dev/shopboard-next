@@ -1,0 +1,1 @@
+export const themeInitializationScript = `(()=>{try{const k='shopboard-theme',v=localStorage.getItem(k),p=v==='light'||v==='dark'?v:'system',d=p==='dark'||p==='system'&&matchMedia('(prefers-color-scheme: dark)').matches?'dark':'light',e=document.documentElement;e.dataset.theme=p;e.style.colorScheme=p==='system'?'':d}catch{}})()`;

@@ -8,7 +8,6 @@ import { Hero } from "@/features/storefront/hero";
 import { Benefits } from "@/features/storefront/benefits";
 import { Philosophy } from "@/features/storefront/philosophy";
 import { CatalogIntroduction } from "@/features/storefront/catalog-introduction";
-import "./home-page.css";
 
 async function HomeCatalog() {
   const catalog = await loadProductCatalog();

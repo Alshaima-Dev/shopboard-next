@@ -5,6 +5,7 @@ import { Navbar } from "./navbar";
 import { CartButton } from "@/features/cart/cart-controls";
 import { LanguagePicker } from "@/features/i18n/language-picker";
 import { useLocalization } from "@/features/i18n/language-provider";
+import { ThemeToggle } from "@/features/theme/theme-toggle";
 
 export function Header() {
   const { t, money } = useLocalization();
@@ -20,6 +21,7 @@ export function Header() {
         <Navbar />
         <div dir="ltr" className="flex min-w-0 items-center justify-self-end gap-1 [grid-area:actions] tablet:gap-3">
           <LanguagePicker />
+          <ThemeToggle />
           <CartButton />
         </div>
       </div>

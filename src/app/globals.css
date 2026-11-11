@@ -1,5 +1,70 @@
 @import "tailwindcss";
 
+:root {
+  color-scheme: light;
+  --theme-background: #f8f1e7;
+  --theme-foreground: #3e2723;
+  --theme-primary: #6b2c2c;
+  --theme-primary-foreground: #f8f1e7;
+  --theme-accent: #d8c3a5;
+  --theme-muted-foreground: #8b6b4a;
+  --theme-soft: color-mix(in srgb, #d8c3a5 16%, #f8f1e7);
+  --theme-border: color-mix(in srgb, #d8c3a5 65%, #f8f1e7);
+  --theme-control-border: #8b6b4a;
+  --theme-ring: #6b2c2c;
+  --theme-action-hover: #3e2723;
+  --theme-danger: #3e2723;
+  --theme-overlay: rgb(62 39 35 / 44%);
+  --theme-image-outline: rgb(0 0 0 / 10%);
+  --theme-primary-muted: #d8c3a5;
+  --theme-shadow-card: 0 1px 2px oklch(0 0 0 / 0.04), 0 4px 16px oklch(0 0 0 / 0.035);
+  --theme-shadow-card-active: 0 1px 3px oklch(0 0 0 / 0.06), 0 6px 20px oklch(0 0 0 / 0.07);
+}
+
+:root[data-theme="dark"] {
+  color-scheme: dark;
+  --theme-background: #171211;
+  --theme-foreground: #f7eee5;
+  --theme-primary: #e7aaaa;
+  --theme-primary-foreground: #251616;
+  --theme-accent: #4f3931;
+  --theme-muted-foreground: #d3b39b;
+  --theme-soft: #241b18;
+  --theme-border: #634a40;
+  --theme-control-border: #a98268;
+  --theme-ring: #ffc0c0;
+  --theme-action-hover: #f0c5c5;
+  --theme-danger: #ffb4ab;
+  --theme-overlay: rgb(0 0 0 / 68%);
+  --theme-image-outline: rgb(255 255 255 / 16%);
+  --theme-primary-muted: #4f302f;
+  --theme-shadow-card: 0 0 0 1px rgb(231 170 170 / 14%), 0 8px 24px rgb(0 0 0 / 24%);
+  --theme-shadow-card-active: 0 0 0 1px rgb(231 170 170 / 24%), 0 10px 30px rgb(0 0 0 / 34%);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]):not([data-theme="dark"]) {
+    color-scheme: dark;
+    --theme-background: #171211;
+    --theme-foreground: #f7eee5;
+    --theme-primary: #e7aaaa;
+    --theme-primary-foreground: #251616;
+    --theme-accent: #4f3931;
+    --theme-muted-foreground: #d3b39b;
+    --theme-soft: #241b18;
+    --theme-border: #634a40;
+    --theme-control-border: #a98268;
+    --theme-ring: #ffc0c0;
+    --theme-action-hover: #f0c5c5;
+    --theme-danger: #ffb4ab;
+    --theme-overlay: rgb(0 0 0 / 68%);
+    --theme-image-outline: rgb(255 255 255 / 16%);
+    --theme-primary-muted: #4f302f;
+    --theme-shadow-card: 0 0 0 1px rgb(231 170 170 / 14%), 0 8px 24px rgb(0 0 0 / 24%);
+    --theme-shadow-card-active: 0 0 0 1px rgb(231 170 170 / 24%), 0 10px 30px rgb(0 0 0 / 34%);
+  }
+}
+
 @utility storefront-primary {
   @apply inline-flex max-w-full cursor-pointer items-center justify-center rounded-control bg-primary font-medium leading-[1.6] text-center text-primary-foreground [overflow-wrap:break-word];
   touch-action: manipulation;
@@ -68,8 +133,6 @@
   --radius-control: 8px;
   --radius-image: 12px;
   --radius-card: 21px;
-  --shadow-card: 0 1px 2px oklch(0 0 0 / 0.04), 0 4px 16px oklch(0 0 0 / 0.035);
-  --shadow-card-active: 0 1px 3px oklch(0 0 0 / 0.06), 0 6px 20px oklch(0 0 0 / 0.07);
   --ease-ui: cubic-bezier(0.23, 1, 0.32, 1);
 
   /* Source px thresholds expressed in rem, matching Tailwind's breakpoint units.
@@ -122,15 +185,23 @@
 /* Inline aliases resolve font variables at the element using the utility.
    Language-scoped families can therefore also cover future Arabic UI. */
 @theme inline {
-  --color-primary: var(--color-burgundy);
-  --color-primary-foreground: var(--color-cream);
-  --color-background: var(--color-cream);
-  --color-foreground: var(--color-chocolate);
-  --color-accent: var(--color-beige);
-  --color-muted-foreground: var(--color-coffee);
-  --color-soft: color-mix(in srgb, var(--color-beige) 16%, var(--color-cream));
-  --color-border: color-mix(in srgb, var(--color-beige) 65%, var(--color-cream));
-  --color-ring: var(--color-burgundy);
+  --color-primary: var(--theme-primary);
+  --color-primary-foreground: var(--theme-primary-foreground);
+  --color-background: var(--theme-background);
+  --color-foreground: var(--theme-foreground);
+  --color-accent: var(--theme-accent);
+  --color-muted-foreground: var(--theme-muted-foreground);
+  --color-soft: var(--theme-soft);
+  --color-border: var(--theme-border);
+  --color-coffee: var(--theme-control-border);
+  --color-ring: var(--theme-ring);
+  --color-action-hover: var(--theme-action-hover);
+  --color-danger: var(--theme-danger);
+  --color-overlay: var(--theme-overlay);
+  --color-image-outline: var(--theme-image-outline);
+  --color-primary-muted: var(--theme-primary-muted);
+  --shadow-card: var(--theme-shadow-card);
+  --shadow-card-active: var(--theme-shadow-card-active);
   --font-sans: var(--font-body-family);
   --font-heading: var(--font-heading-family);
   --font-display: var(--font-display-family);

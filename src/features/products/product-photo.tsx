@@ -28,7 +28,7 @@ export function ProductPhoto({ image, alt, unavailable, sizes, children }: Produ
           loading="lazy"
           decoding="async"
           unoptimized={fallback}
-          className="object-contain object-center outline-1 -outline-offset-1 outline-black/10"
+          className="object-contain object-center outline-1 -outline-offset-1 outline-image-outline"
           onError={() => setFailures((count) => count + 1)}
         />
       )}
